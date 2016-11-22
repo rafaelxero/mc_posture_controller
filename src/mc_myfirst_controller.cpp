@@ -7,11 +7,16 @@ namespace mc_control {
 	: MCController(robot_module, dt) {
 
 	solver().addConstraintSet(contactConstraint);
-	solver().addConstraintSet(kinematicsConstraint);
+	solver().addConstraintSet(dynamicsConstraint);
 	solver().addTask(postureTask.get());
-	solver().setContacts({});
+	solver().setContacts({{robots(), 0, 1, "LFullSole", "AllGround"}, 
+		    {robots(), 0, 1, "RFullSole", "AllGround"}});
 
 	head_joint_index = robot().jointIndexByName("HEAD_JOINT0");
+	
+	comTask = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robotIndex(), 2.0, 100.0);
+	solver().addTask(comTask);
+	postureTask->stiffness(1.0);
 	
 	LOG_SUCCESS("MCMyFirstController init done " << this);
     }
@@ -20,7 +25,7 @@ namespace mc_control {
 
 	bool ret = MCController::run();
 
-	if (std::abs(postureTask->posture()[head_joint_index][0] - robot().mbc().q[head_joint_index][0]) < 0.05) {
+	if (comTask->eval().norm() < 0.02) {
 	    switch_target();
 	}
 
@@ -30,24 +35,24 @@ namespace mc_control {
     void MCMyFirstController::reset(const ControllerResetData & reset_data) {
     
 	MCController::reset(reset_data);
+	comTask->reset();
+	comZero = rbd::computeCoM(robot().mb(), robot().mbc());
 	target_left = true;
 	switch_target();
     }
 
     void MCMyFirstController::switch_target() {
     
-	double target;
+	Eigen::Vector3d move(0.0, 0.06, 0.0), target;
 
 	if (target_left) {
-	    target = robot().qu()[head_joint_index][0];
+	    target = comZero + move;
 	}
 	else {
-	    target = robot().ql()[head_joint_index][0];
+	    target = comZero - move;
 	}
 	
-	std::vector<std::vector<double>> cur_obj = postureTask->posture();
-	cur_obj[head_joint_index][0] = target;
-	postureTask->posture(cur_obj);
+	comTask->com(target);
 	target_left = !target_left;
     }
 }

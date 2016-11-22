@@ -1,6 +1,7 @@
 #pragma once
 #include <mc_control/mc_controller.h>
 #include <mc_control/api.h>
+#include <mc_tasks/CoMTask.h>
 
 namespace mc_control {
 
@@ -16,6 +17,9 @@ namespace mc_control {
     
 	int head_joint_index;
 	bool target_left;
+	
+	std::shared_ptr<mc_tasks::CoMTask> comTask;
+	Eigen::Vector3d comZero;
     };
 
     SIMPLE_CONTROLLER_CONSTRUCTOR("MyFirst", mc_control::MCMyFirstController)
