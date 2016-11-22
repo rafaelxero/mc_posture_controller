@@ -2,6 +2,7 @@
 #include <mc_control/mc_controller.h>
 #include <mc_control/api.h>
 #include <mc_tasks/CoMTask.h>
+#include <mc_tasks/EndEffectorTask.h>
 
 namespace mc_control {
 
@@ -19,7 +20,8 @@ namespace mc_control {
 	bool target_left;
 	
 	std::shared_ptr<mc_tasks::CoMTask> comTask;
-	Eigen::Vector3d comZero;
+	sva::PTransformd transformZero;
+	std::shared_ptr<mc_tasks::EndEffectorTask> efTask;
     };
 
     SIMPLE_CONTROLLER_CONSTRUCTOR("MyFirst", mc_control::MCMyFirstController)
