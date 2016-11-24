@@ -3,6 +3,7 @@
 #include <mc_control/api.h>
 #include <mc_tasks/CoMTask.h>
 #include <mc_tasks/EndEffectorTask.h>
+#include <RBDyn/FK.h>
 
 namespace mc_control {
 
@@ -14,14 +15,20 @@ namespace mc_control {
 
 	virtual bool run() override;
 	virtual void reset(const ControllerResetData & reset_data) override;
-	void switch_target();
+	void switch_phase();
     
-	int head_joint_index;
-	bool target_left;
-	
-	std::shared_ptr<mc_tasks::CoMTask> comTask;
-	sva::PTransformd transformZero;
 	std::shared_ptr<mc_tasks::EndEffectorTask> efTask;
+	
+	std::shared_ptr<tasks::qp::PostureTask> doorPostureTask;
+	mc_solver::KinematicsConstraint doorKinematicsConstraint;
+	
+	enum DoorPhase {
+	    APPROACH = 0,
+	    HANDLE,
+	    OPEN
+	};
+
+	DoorPhase phase = APPROACH;
     };
 
     SIMPLE_CONTROLLER_CONSTRUCTOR("MyFirst", mc_control::MCMyFirstController)
